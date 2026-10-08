@@ -1,0 +1,26 @@
+# User-supplied data is not redistributed in this repository.
+GMD.csv
+data/*.csv
+data/*.parquet
+!data/README.md
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Secrets / local configuration
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Generated outputs
+*.joblib
+*.pkl
+*.log
+.DS_Store
