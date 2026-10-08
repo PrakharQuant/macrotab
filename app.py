@@ -40,6 +40,9 @@ html, body, [class*="css"] { font-family: 'Manrope', sans-serif; }
 .pulse-social-links a:hover { transform: translateY(-1px); box-shadow: 0 3px 10px #18294c18; }
 .pulse-social-icon { display: block; width: 15px; height: 15px; }
 .pulse-subtitle { color: #66748a; font-size: 14px; margin-bottom: 20px; }
+.pulse-data-credit { color: #69778c; font-size: 11px; margin: -12px 0 18px; }
+.pulse-data-credit a { color: #4567f5; text-decoration: none; }
+.pulse-data-credit a:hover { text-decoration: underline; }
 .pulse-note { border-left: 3px solid #e7ad47; background: #fff9ec; padding: 11px 14px; border-radius: 3px 10px 10px 3px; color: #66532c; font-size: 12px; }
 </style>
 """, unsafe_allow_html=True)
@@ -81,14 +84,15 @@ st.markdown(f'''
 <img class="pulse-social-icon" src="data:image/svg+xml;base64,{X_ICON}" alt=""></a>
 </span></div>
 <div class="pulse-subtitle">Annual macro regimes, country risk signals, and transparent portfolio tilts.</div>
+<div class="pulse-data-credit">Data: <a href="https://www.globalmacrodata.com/research-paper.html" target="_blank" rel="noopener noreferrer">Global Macro Database</a> · Müller, Xu, Lehbib &amp; Chen (2025), NBER Working Paper 33714 · <a href="https://www.globalmacrodata.com/license.html" target="_blank" rel="noopener noreferrer">Research Use Terms</a>. Not affiliated with or endorsed by the authors.</div>
 ''', unsafe_allow_html=True)
 
 try:
     if DATA_PATH.is_file():
         raw, audit = load_cached(str(DATA_PATH))
     else:
-        st.info("For privacy and licensing, the source dataset is not bundled with this app. Upload an authorized copy to analyze it.")
-        uploaded = st.file_uploader("Upload GMD.csv", type=["csv"], help="The file is processed in this app session and is not committed to the GitHub repository.")
+        st.info("The source dataset is not bundled. Upload only a copy you are authorized to use, and follow the GMD Research Use Terms linked above.")
+        uploaded = st.file_uploader("Upload GMD.csv", type=["csv"], help="The CSV is not committed to GitHub. Uploading it does not grant rights to redistribute GMD data or derived results.")
         if uploaded is None:
             st.stop()
         raw, audit = load_uploaded(uploaded.getvalue())

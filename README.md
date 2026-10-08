@@ -6,6 +6,27 @@
 
 MacroPulse turns an annual country-year macro panel into an exploratory research workflow: feature engineering, historical-only regime clustering, next-year crisis scoring, a disclosed country macro rank, and an interactive Streamlit dashboard. It is intended as a reproducible **low-frequency macro-finance research project**, not a high-frequency trading system.
 
+## Data source and citation
+
+MacroPulse was built using the Global Macro Database (GMD). The dataset is maintained by Karsten Müller, Chenzi Xu, Mohamed Lehbib, and Ziliang Chen. Please cite the source as:
+
+```bibtex
+@techreport{GMD2025,
+  title       = {The Global Macro Database: A New International Macroeconomic Dataset},
+  author      = {M{"u}ller, Karsten and Xu, Chenzi and Lehbib, Mohamed and Chen, Ziliang},
+  institution = {National Bureau of Economic Research},
+  type        = {Working Paper},
+  series      = {Working Paper Series},
+  number      = {33714},
+  year        = {2025},
+  month       = {April},
+  doi         = {10.3386/w33714},
+  URL         = {http://www.nber.org/papers/w33714}
+}
+```
+
+See the [GMD research paper](https://www.globalmacrodata.com/research-paper.html) and [Research Use Terms](https://www.globalmacrodata.com/license.html). The GMD terms govern the data separately from this project's MIT-licensed code. They restrict republishing the data or derived data on another website or service without written approval. Because a public dashboard may expose GMD-derived results, confirm the permitted-use scope with the maintainers before serving those results publicly. Citation alone does not grant redistribution or service rights. The app therefore does not bundle or automatically download the GMD dataset.
+
 ## What it does
 
 - **Data validation:** checks the GMD schema, records exclusions and duplicate country-years, and restricts the analysis window to 1960–2031.
@@ -44,7 +65,7 @@ The dashboard is designed around the supplied CSV column names. The loader requi
 
 ### Streamlit Community Cloud
 
-After the code is pushed to GitHub, create a Streamlit Community Cloud app using repository `PrakharQuant/macroplulse`, branch `main`, and file path `app.py`. The CSV is not bundled; the deployed app prompts the viewer to upload their authorized copy. For local use, place it at `data/GMD.csv`. Do not add private Streamlit secrets for this file.
+The repository's entry point is `app.py`. The current mode prompts the viewer to upload their own authorized CSV; it does not call Anansi MCP. GMD documents the OAuth-protected AI-agent endpoint [`https://mcp.anansidata.com/mcp`](https://mcp.anansidata.com/mcp) and the direct Python package [`global-macro-data`](https://github.com/KMueller-Lab/Global-Macro-Database-Python). A Manus MCP connection does not pass credentials to Streamlit Cloud. Any live GMD-backed public service still needs to comply with the Research Use Terms and any required written permission; this app will not automatically fetch or serve GMD data until that is resolved.
 
 ## Data handling and period assumptions
 
@@ -52,7 +73,7 @@ The supplied file contains rows dated **1086–2031**, with 57,392 country-year 
 
 The application uses **1960–2024** as the historical research period and displays **2025–2031** as a forward/forecast-period section. This is a conservative project convention: the CSV does not provide a complete vintage/provenance field that certifies every row after 2024 as a forecast, and the UI states that limitation. Crisis outcomes after the historical cutoff are never used for training or testing. If you have a better source-vintage cutoff, update the constants in `src/macropulse/data.py` and document the evidence.
 
-The original CSV is **not committed**. The file's source attribution and redistribution licence were not included with the upload; `.gitignore` excludes local CSVs. Only publish the data if you have verified permission to redistribute it.
+The original CSV is **not committed**. `.gitignore` excludes local CSVs. The source is credited above; its separate Research Use Terms prohibit re-hosting or distributing GMD data or derived data on another site/service without the required permission. Do not include the CSV or activate public live-data serving unless the use is authorized.
 
 ## Method and limitations
 
@@ -87,4 +108,4 @@ pytest
 
 ## License and use
 
-Project code is provided under the MIT License. The dataset is excluded and may have separate terms. This is educational research software, not investment advice.
+Project code is provided under the MIT License. The GMD dataset is excluded and is governed by its separate [Research Use Terms](https://www.globalmacrodata.com/license.html). This is research software, not investment advice, and the GMD authors do not endorse it.
