@@ -1,4 +1,4 @@
-# MacroPulse
+# MacroTab
 
 **Global macro regimes · crisis early warning · transparent country macro tilts**
 
