@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import os
 import sys
 from pathlib import Path
@@ -31,9 +32,13 @@ html, body, [class*="css"] { font-family: 'Manrope', sans-serif; }
 .block-container { padding-top: 1.5rem; padding-bottom: 3rem; }
 .pulse-eyebrow { color: #5574f7; text-transform: uppercase; font: 500 11px 'DM Mono', monospace; letter-spacing: .12em; }
 .pulse-title { font-size: clamp(32px,4vw,48px); font-weight: 800; letter-spacing: -.05em; color: #142039; line-height: 1.05; margin: 5px 0 6px; }
-.pulse-byline { color: #34445f; font-size: 13px; margin: 4px 0 8px; }
-.pulse-byline a { color: #4567f5; font-weight: 700; text-decoration: none; margin-left: 8px; }
-.pulse-byline a:hover { text-decoration: underline; }
+.pulse-byline { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: #34445f; font-size: 13px; margin: 4px 0 8px; }
+.pulse-author-email a { color: #4567f5; font-weight: 600; text-decoration: none; }
+.pulse-author-email a:hover { text-decoration: underline; }
+.pulse-social-links { display: inline-flex; align-items: center; gap: 7px; margin-left: 2px; }
+.pulse-social-links a { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1px solid #e1e7f2; border-radius: 50%; background: white; transition: transform .15s ease, box-shadow .15s ease; }
+.pulse-social-links a:hover { transform: translateY(-1px); box-shadow: 0 3px 10px #18294c18; }
+.pulse-social-icon { display: block; width: 15px; height: 15px; }
 .pulse-subtitle { color: #66748a; font-size: 14px; margin-bottom: 20px; }
 .pulse-note { border-left: 3px solid #e7ad47; background: #fff9ec; padding: 11px 14px; border-radius: 3px 10px 10px 3px; color: #66532c; font-size: 12px; }
 </style>
@@ -41,6 +46,8 @@ html, body, [class*="css"] { font-family: 'Manrope', sans-serif; }
 
 ROOT = Path(__file__).resolve().parent
 DATA_PATH = Path(os.environ.get("MACROPULSE_DATA", str(ROOT / "data" / "GMD.csv")))
+LINKEDIN_ICON = base64.b64encode((ROOT / "assets" / "linkedin.svg").read_bytes()).decode("ascii")
+X_ICON = base64.b64encode((ROOT / "assets" / "x.svg").read_bytes()).decode("ascii")
 
 @st.cache_data(show_spinner=False)
 def load_cached(path: str):
@@ -62,12 +69,17 @@ def regimes_cached(frame: pd.DataFrame, cutoff: int):
 def crisis_cached(frame: pd.DataFrame, cutoff: int):
     return build_crisis_radar(frame, as_of_year=cutoff)
 
-st.markdown('''
+st.markdown(f'''
 <div class="pulse-eyebrow">GLOBAL MACRO · QUANT RESEARCH</div>
 <div class="pulse-title">MacroPulse</div>
 <div class="pulse-byline"><strong>Built by Prakhar Gupta</strong>
-<a href="https://www.linkedin.com/in/prakhar-gupta-5b7250372/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-<a href="https://x.com/PrakharQuant" target="_blank" rel="noopener noreferrer">X · @PrakharQuant</a></div>
+<span class="pulse-author-email">· <a href="mailto:bestofprakhar@gmail.com">bestofprakhar@gmail.com</a></span>
+<span class="pulse-social-links">
+<a href="https://www.linkedin.com/in/prakhar-gupta-5b7250372/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn profile" title="LinkedIn">
+<img class="pulse-social-icon" src="data:image/svg+xml;base64,{LINKEDIN_ICON}" alt=""></a>
+<a href="https://x.com/PrakharQuant" target="_blank" rel="noopener noreferrer" aria-label="X profile" title="X">
+<img class="pulse-social-icon" src="data:image/svg+xml;base64,{X_ICON}" alt=""></a>
+</span></div>
 <div class="pulse-subtitle">Annual macro regimes, country risk signals, and transparent portfolio tilts.</div>
 ''', unsafe_allow_html=True)
 
