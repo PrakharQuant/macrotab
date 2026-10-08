@@ -31,6 +31,9 @@ html, body, [class*="css"] { font-family: 'Manrope', sans-serif; }
 .block-container { padding-top: 1.5rem; padding-bottom: 3rem; }
 .pulse-eyebrow { color: #5574f7; text-transform: uppercase; font: 500 11px 'DM Mono', monospace; letter-spacing: .12em; }
 .pulse-title { font-size: clamp(32px,4vw,48px); font-weight: 800; letter-spacing: -.05em; color: #142039; line-height: 1.05; margin: 5px 0 6px; }
+.pulse-byline { color: #34445f; font-size: 13px; margin: 4px 0 8px; }
+.pulse-byline a { color: #4567f5; font-weight: 700; text-decoration: none; margin-left: 8px; }
+.pulse-byline a:hover { text-decoration: underline; }
 .pulse-subtitle { color: #66748a; font-size: 14px; margin-bottom: 20px; }
 .pulse-note { border-left: 3px solid #e7ad47; background: #fff9ec; padding: 11px 14px; border-radius: 3px 10px 10px 3px; color: #66532c; font-size: 12px; }
 </style>
@@ -59,7 +62,14 @@ def regimes_cached(frame: pd.DataFrame, cutoff: int):
 def crisis_cached(frame: pd.DataFrame, cutoff: int):
     return build_crisis_radar(frame, as_of_year=cutoff)
 
-st.markdown('<div class="pulse-eyebrow">GLOBAL MACRO · QUANT RESEARCH</div><div class="pulse-title">MacroPulse</div><div class="pulse-subtitle">Annual macro regimes, country risk signals, and transparent portfolio tilts.</div>', unsafe_allow_html=True)
+st.markdown('''
+<div class="pulse-eyebrow">GLOBAL MACRO · QUANT RESEARCH</div>
+<div class="pulse-title">MacroPulse</div>
+<div class="pulse-byline"><strong>Built by Prakhar Gupta</strong>
+<a href="https://www.linkedin.com/in/prakhar-gupta-5b7250372/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+<a href="https://x.com/PrakharQuant" target="_blank" rel="noopener noreferrer">X · @PrakharQuant</a></div>
+<div class="pulse-subtitle">Annual macro regimes, country risk signals, and transparent portfolio tilts.</div>
+''', unsafe_allow_html=True)
 
 try:
     if DATA_PATH.is_file():

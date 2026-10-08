@@ -2,6 +2,8 @@
 
 **Global macro regimes · crisis early warning · transparent country macro tilts**
 
+**Built by Prakhar Gupta** · [LinkedIn](https://www.linkedin.com/in/prakhar-gupta-5b7250372/) · [X / @PrakharQuant](https://x.com/PrakharQuant)
+
 MacroPulse turns an annual country-year macro panel into an exploratory research workflow: feature engineering, historical-only regime clustering, next-year crisis scoring, a disclosed country macro rank, and an interactive Streamlit dashboard. It is intended as a reproducible **low-frequency macro-finance research project**, not a high-frequency trading system.
 
 ## What it does
