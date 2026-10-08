@@ -4,11 +4,11 @@
 
 **Built by Prakhar Gupta** · [LinkedIn](https://www.linkedin.com/in/prakhar-gupta-5b7250372/) · [X / @PrakharQuant](https://x.com/PrakharQuant)
 
-MacroPulse turns an annual country-year macro panel into an exploratory research workflow: feature engineering, historical-only regime clustering, next-year crisis scoring, a disclosed country macro rank, and an interactive Streamlit dashboard. It is intended as a reproducible **low-frequency macro-finance research project**, not a high-frequency trading system.
+MacroTab turns an annual country-year macro panel into an exploratory research workflow: feature engineering, historical-only regime clustering, next-year crisis scoring, a disclosed country macro rank, and an interactive Streamlit dashboard. It is intended as a reproducible **low-frequency macro-finance research project**, not a high-frequency trading system.
 
 ## Data source and citation
 
-MacroPulse was built using the Global Macro Database (GMD). The dataset is maintained by Karsten Müller, Chenzi Xu, Mohamed Lehbib, and Ziliang Chen. Please cite the source as:
+MacroTab was built using the Global Macro Database (GMD). The dataset is maintained by Karsten Müller, Chenzi Xu, Mohamed Lehbib, and Ziliang Chen. Please cite the source as:
 
 ```bibtex
 @techreport{GMD2025,
@@ -58,7 +58,7 @@ streamlit run app.py
 To use a different file location:
 
 ```bash
-MACROPULSE_DATA=/path/to/GMD.csv streamlit run app.py
+MACROTab_DATA=/path/to/GMD.csv streamlit run app.py
 ```
 
 The dashboard is designed around the supplied CSV column names. The loader requires `countryname`, `ISO3`, `year`, `rGDP`, and `infl`; optional macro or crisis columns are handled as missing.
@@ -69,9 +69,9 @@ The repository's entry point is `app.py`. The current mode prompts the viewer to
 
 ## Data handling and period assumptions
 
-The supplied file contains rows dated **1086–2031**, with 57,392 country-year rows and 162 columns. Its provided brief describes a practical analysis span of roughly 1960–2031. MacroPulse therefore restricts analysis to **1960–2031** and records how many source rows fall outside that window.
+The supplied file contains rows dated **1086–2031**, with 57,392 country-year rows and 162 columns. Its provided brief describes a practical analysis span of roughly 1960–2031. MacroTab therefore restricts analysis to **1960–2031** and records how many source rows fall outside that window.
 
-The application uses **1960–2024** as the historical research period and displays **2025–2031** as a forward/forecast-period section. This is a conservative project convention: the CSV does not provide a complete vintage/provenance field that certifies every row after 2024 as a forecast, and the UI states that limitation. Crisis outcomes after the historical cutoff are never used for training or testing. If you have a better source-vintage cutoff, update the constants in `src/macropulse/data.py` and document the evidence.
+The application uses **1960–2024** as the historical research period and displays **2025–2031** as a forward/forecast-period section. This is a conservative project convention: the CSV does not provide a complete vintage/provenance field that certifies every row after 2024 as a forecast, and the UI states that limitation. Crisis outcomes after the historical cutoff are never used for training or testing. If you have a better source-vintage cutoff, update the constants in `src/macroTab/data.py` and document the evidence.
 
 The original CSV is **not committed**. `.gitignore` excludes local CSVs. The source is credited above; its separate Research Use Terms prohibit re-hosting or distributing GMD data or derived data on another site/service without the required permission. Do not include the CSV or activate public live-data serving unless the use is authorized.
 
@@ -86,16 +86,16 @@ The original CSV is **not committed**. `.gitignore` excludes local CSVs. The sou
 
 ### What it does not claim
 
-The GMD file contains annual macro variables and crisis indicators, not security total-return series. MacroPulse **does not produce CAGR, Sharpe ratio, volatility, drawdown, transaction costs, or an asset-allocation backtest**. The country weights are heuristic research tilts, not investable securities, portfolio advice, or evidence of predictive alpha. Country scores are not causal estimates. Definitions, units, revisions, missingness and forecast vintages remain subject to the upstream dataset.
+The GMD file contains annual macro variables and crisis indicators, not security total-return series. MacroTab **does not produce CAGR, Sharpe ratio, volatility, drawdown, transaction costs, or an asset-allocation backtest**. The country weights are heuristic research tilts, not investable securities, portfolio advice, or evidence of predictive alpha. Country scores are not causal estimates. Definitions, units, revisions, missingness and forecast vintages remain subject to the upstream dataset.
 
 ## Repository layout
 
 ```text
 app.py                         Streamlit dashboard
-src/macropulse/data.py         validation and coverage audit
-src/macropulse/features.py     annual macro feature engineering
-src/macropulse/portfolio.py    regime model, country scores, illustrative tilts
-src/macropulse/crisis.py       t+1 crisis labels and temporal model evaluation
+src/macroTab/data.py         validation and coverage audit
+src/macroTab/features.py     annual macro feature engineering
+src/macroTab/portfolio.py    regime model, country scores, illustrative tilts
+src/macroTab/crisis.py       t+1 crisis labels and temporal model evaluation
 tests/test_engine.py           unit tests
 data/README.md                 local data instructions
 ```
