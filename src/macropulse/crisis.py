@@ -33,19 +33,25 @@ def _pipeline() -> object:
     )
 
 
-def build_crisis_radar(frame: pd.DataFrame, as_of_year: int = 2024, train_end_year: int = 2010) -> tuple[pd.DataFrame, pd.DataFrame]:
+def build_crisis_radar(
+    frame: pd.DataFrame,
+    as_of_year: int = 2024,
+    train_end_year: int = 2010,
+    start_year: int | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Return latest-country model scores and temporal holdout metrics for each crisis.
 
     The training outcome year is predictor year + 1. Forecast/estimation rows from
     2025 onward are never used as labeled training or evaluation outcomes.
     """
+    sample = frame if start_year is None else frame.loc[frame["year"].ge(start_year)]
     output: pd.DataFrame | None = None
     metrics: list[dict[str, object]] = []
-    latest = frame.loc[frame["year"].le(as_of_year)].sort_values(["ISO3", "year"]).groupby("ISO3", as_index=False, sort=False).tail(1).copy()
+    latest = sample.loc[sample["year"].le(as_of_year)].sort_values(["ISO3", "year"]).groupby("ISO3", as_index=False, sort=False).tail(1).copy()
 
     for target in CRISIS_TARGETS:
         column = f"{target}_next_year"
-        work = frame.copy()
+        work = sample.copy()
         work[column] = next_year_labels(work, target)
         labels = work.loc[work[column].notna() & work["year"].lt(as_of_year)].copy()
         if not labels.empty:

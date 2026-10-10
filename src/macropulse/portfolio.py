@@ -10,7 +10,12 @@ from sklearn.preprocessing import RobustScaler
 from .features import MODEL_FEATURES
 
 
-def fit_regimes(frame: pd.DataFrame, training_end_year: int = 2024, n_clusters: int = 4) -> pd.DataFrame:
+def fit_regimes(
+    frame: pd.DataFrame,
+    training_end_year: int = 2024,
+    n_clusters: int = 4,
+    training_start_year: int | None = None,
+) -> pd.DataFrame:
     """Fit K-means on historical rows only, then map all years to those clusters.
 
     Names are heuristic descriptions of standardized growth/inflation centroids;
@@ -20,6 +25,8 @@ def fit_regimes(frame: pd.DataFrame, training_end_year: int = 2024, n_clusters: 
     feature_columns = list(MODEL_FEATURES)
     usable = out[feature_columns].notna().sum(axis=1).ge(3)
     training_mask = usable & out["year"].le(training_end_year)
+    if training_start_year is not None:
+        training_mask &= out["year"].ge(training_start_year)
     if int(training_mask.sum()) < max(40, n_clusters * 5):
         out["regime"] = "Insufficient history"
         out["regime_cluster"] = pd.Series(pd.NA, index=out.index, dtype="Int64")
@@ -78,9 +85,16 @@ def _cross_section_zscore(series: pd.Series, higher_is_better: bool = True) -> p
     return z if higher_is_better else -z
 
 
-def country_macro_scores(frame: pd.DataFrame, as_of_year: int = 2024) -> pd.DataFrame:
+def country_macro_scores(
+    frame: pd.DataFrame,
+    as_of_year: int = 2024,
+    start_year: int | None = None,
+) -> pd.DataFrame:
     """Build a disclosed equal-weight heuristic score from latest available country rows."""
-    sample = frame.loc[frame["year"].le(as_of_year)].sort_values(["ISO3", "year"])
+    sample_mask = frame["year"].le(as_of_year)
+    if start_year is not None:
+        sample_mask &= frame["year"].ge(start_year)
+    sample = frame.loc[sample_mask].sort_values(["ISO3", "year"])
     if sample.empty:
         return pd.DataFrame(columns=["countryname", "ISO3", "year", "macro_score"])
     sample = sample.groupby("ISO3", as_index=False, sort=False).tail(1).copy()

@@ -3,10 +3,10 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from macropulse.crisis import next_year_labels
+from macropulse.crisis import build_crisis_radar, next_year_labels
 from macropulse.data import load_dataset
-from macropulse.features import engineer_features
-from macropulse.portfolio import illustrative_weights
+from macropulse.features import MODEL_FEATURES, engineer_features
+from macropulse.portfolio import country_macro_scores, fit_regimes, illustrative_weights
 
 
 def tiny_panel() -> pd.DataFrame:
@@ -60,6 +60,35 @@ def test_next_year_crisis_labels_align_only_consecutive_years():
     row_2001_a = panel.index[(panel.ISO3 == "AAA") & (panel.year == 2001)][0]
     assert labels.loc[row_2000_a] == 1
     assert pd.isna(labels.loc[row_2001_a])
+
+
+def test_crisis_radar_latest_rows_respect_start_year():
+    predictions, _ = build_crisis_radar(tiny_panel(), as_of_year=2003, start_year=2001)
+    latest = predictions.set_index("ISO3")["year"].to_dict()
+    assert latest == {"AAA": 2003, "BBB": 2001}
+
+
+def test_regime_training_window_respects_start_year():
+    frame = pd.DataFrame({"year": [2000] * 45 + [2010] * 5})
+    for column in MODEL_FEATURES:
+        frame[column] = np.linspace(0, 1, len(frame))
+    result = fit_regimes(frame, training_end_year=2024, training_start_year=2010)
+    assert result["regime"].eq("Insufficient history").all()
+
+
+def test_country_macro_scores_exclude_years_before_selected_start():
+    frame = pd.DataFrame({
+        "countryname": ["Oldland", "Currentia"],
+        "ISO3": ["OLD", "CUR"],
+        "year": [2005, 2020],
+        "gdp_growth": [1.0, 2.0],
+        "infl": [2.0, 3.0],
+        "govdebt_GDP": [30.0, 40.0],
+        "CA_GDP": [1.0, 2.0],
+        "unemp": [5.0, 4.0],
+    })
+    result = country_macro_scores(frame, as_of_year=2024, start_year=2010)
+    assert result["ISO3"].tolist() == ["CUR"]
 
 
 def test_illustrative_weights_are_long_only_and_sum_to_one():

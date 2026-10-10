@@ -65,12 +65,12 @@ def features_cached(frame: pd.DataFrame):
     return engineer_features(frame)
 
 @st.cache_data(show_spinner="Fitting historical regime model…")
-def regimes_cached(frame: pd.DataFrame, cutoff: int):
-    return fit_regimes(frame, training_end_year=cutoff)
+def regimes_cached(frame: pd.DataFrame, start_year: int, cutoff: int):
+    return fit_regimes(frame, training_end_year=cutoff, training_start_year=start_year)
 
 @st.cache_data(show_spinner="Scoring crisis models and evaluating the temporal holdout…")
-def crisis_cached(frame: pd.DataFrame, cutoff: int):
-    return build_crisis_radar(frame, as_of_year=cutoff)
+def crisis_cached(frame: pd.DataFrame, start_year: int, cutoff: int):
+    return build_crisis_radar(frame, as_of_year=cutoff, start_year=start_year)
 
 st.markdown(f'''
 <div class="pulse-eyebrow">GLOBAL MACRO · QUANT RESEARCH</div>
@@ -113,20 +113,27 @@ max_history = int(history_years.max())
 min_history = int(history_years.min())
 with st.sidebar:
     st.markdown("### Research controls")
-    analysis_year = st.slider("Historical cutoff", min_value=min_history, max_value=max_history, value=max_history, help="Model fitting and portfolio scoring are restricted to this year. Rows from 2025–2031 are never used as historical crisis outcomes.")
+    analysis_start_year, analysis_year = st.slider(
+        "Historical year range",
+        min_value=min_history,
+        max_value=max_history,
+        value=(min_history, max_history),
+        step=1,
+        help=f"Drag the left handle to set the first year and the right handle to set the historical cutoff. The initial range is {min_history}–{max_history}.",
+    )
     country_list = sorted(raw["countryname"].dropna().unique().tolist())
     st.caption(f"{len(country_list)} countries · {int(raw.year.min())}–{int(raw.year.max())} in the selected file")
     st.markdown("---")
     st.caption("MacroPulse is a research prototype. It does not use asset prices, represent investable performance, or provide investment advice.")
 
 panel = features_cached(raw)
-regimes = regimes_cached(panel, analysis_year)
-historical = regimes.loc[regimes.year.le(analysis_year)].copy()
+regimes = regimes_cached(panel, analysis_start_year, analysis_year)
+historical = regimes.loc[regimes.year.between(analysis_start_year, analysis_year)].copy()
 projection = regimes.loc[regimes.year.ge(FORECAST_START_YEAR)].copy()
 latest_rows = historical.sort_values(["ISO3", "year"]).groupby("ISO3", as_index=False, sort=False).tail(1)
 latest_regime = latest_rows["regime"].value_counts().index[0] if not latest_rows.empty and latest_rows["regime"].notna().any() else "Not available"
 
-st.markdown(f'<div class="pulse-note"><b>Sample discipline:</b> Historical fit through {analysis_year}. Rows dated 2025–2031 are shown separately as forward/forecast-period observations and are excluded from crisis training and holdout outcomes. The dataset does not include source-level provenance or a formal forecast marker for every value.</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="pulse-note"><b>Sample discipline:</b> Historical window {analysis_start_year}–{analysis_year}. Rows dated 2025–2031 are shown separately as forward/forecast-period observations and are excluded from crisis training and holdout outcomes. The dataset does not include source-level provenance or a formal forecast marker for every value.</div>', unsafe_allow_html=True)
 
 t_overview, t_country, t_crisis, t_portfolio, t_audit = st.tabs(["Global overview", "Country lab", "Crisis radar", "Macro tilts", "Data audit"])
 
@@ -195,7 +202,7 @@ with t_country:
 with t_crisis:
     st.subheader("Next-year crisis early warning")
     st.caption("Regularized logistic models use information at year t to score the crisis indicator at t+1. Temporal holdout: train on rows through 2010; evaluate on subsequent labeled years through the selected cutoff. Displayed model scores are exploratory and not independently calibrated.")
-    predictions, metrics = crisis_cached(panel, analysis_year)
+    predictions, metrics = crisis_cached(panel, analysis_start_year, analysis_year)
     metric_labels = {"SovDebtCrisis": "Sovereign debt", "CurrencyCrisis": "Currency", "BankingCrisis": "Banking"}
     mcols = st.columns(3)
     for idx, target in enumerate(CRISIS_TARGETS):
@@ -226,7 +233,7 @@ with t_crisis:
 with t_portfolio:
     st.subheader("Country macro tilts")
     st.caption("An equal-weight, cross-sectional heuristic: GDP growth (+), absolute inflation (−), public debt ratio (−), current-account balance (+), and unemployment (−). It is not trained on asset returns and is not a portfolio backtest.")
-    scores = country_macro_scores(panel, as_of_year=analysis_year)
+    scores = country_macro_scores(panel, as_of_year=analysis_year, start_year=analysis_start_year)
     n = st.slider("Countries in illustrative basket", min_value=3, max_value=20, value=10)
     cash = st.slider("Illustrative cash reserve", min_value=0, max_value=30, value=10, step=5) / 100
     weights = illustrative_weights(scores, top_n=n, cash_weight=cash)
@@ -257,7 +264,8 @@ with t_audit:
     c.metric("Rows excluded outside 1960–2031", f"{audit['dropped_outside_window']:,}")
     d.metric("Duplicate country-years removed", f"{audit['dropped_duplicate_country_year']:,}")
     st.caption(f"Input file: `{audit['source_name']}` · {audit['source_bytes'] / 1_000_000:.1f} MB · source rows: {audit['input_rows']:,}")
-    coverage = raw.groupby("year", as_index=False).agg(countries=("ISO3", "nunique"), gdp_observed=("rGDP", "count"), inflation_observed=("infl", "count"), currency_labels=("CurrencyCrisis", "count"))
+    coverage_rows = raw.loc[raw.year.between(analysis_start_year, analysis_year) | raw.year.ge(FORECAST_START_YEAR)]
+    coverage = coverage_rows.groupby("year", as_index=False).agg(countries=("ISO3", "nunique"), gdp_observed=("rGDP", "count"), inflation_observed=("infl", "count"), currency_labels=("CurrencyCrisis", "count"))
     fig = px.area(coverage, x="year", y="countries", title="Country-year coverage in the selected window", color_discrete_sequence=["#5573f5"])
     fig.add_vrect(x0=FORECAST_START_YEAR - .5, x1=2031.5, fillcolor="#f1b64a", opacity=.12, line_width=0, annotation_text="Forward period", annotation_position="top left")
     fig.update_layout(template="plotly_white", height=330, margin=dict(l=15,r=15,t=55,b=15))

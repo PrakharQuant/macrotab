@@ -31,9 +31,9 @@ See the [GMD research paper](https://www.globalmacrodata.com/research-paper.html
 
 - **Data validation:** checks the GMD schema, records exclusions and duplicate country-years, and restricts the analysis window to 1960–2031.
 - **Macro features:** computes real GDP growth as the within-country annual log change and REER change only where consecutive years exist.
-- **Regime discovery:** fits a four-cluster K-means model using observations through the selected historical cutoff. Descriptive cluster names are assigned from standardized growth and inflation centroids; they are not calibrated regime probabilities.
-- **Crisis radar:** aligns predictors at year *t* to crisis labels at *t + 1*, requires consecutive calendar years, preserves missing labels, uses regularized logistic regression, and reports out-of-time ROC-AUC, PR-AUC, and Brier score.
-- **Country macro tilts:** creates a cross-sectional, equal-weight heuristic from growth, absolute inflation, public debt, current-account balance, and unemployment. A softmax converts the top ranks into clearly labeled illustrative weights plus a cash reserve.
+- **Regime discovery:** fits a four-cluster K-means model only inside the selected historical year range (default 1960–2024). Descriptive cluster names are assigned from standardized growth and inflation centroids; they are not calibrated regime probabilities.
+- **Crisis radar:** aligns predictors at year *t* to crisis labels at *t + 1*, requires consecutive calendar years, preserves missing labels, respects the selected historical range, uses regularized logistic regression, and reports out-of-time ROC-AUC, PR-AUC, and Brier score.
+- **Country macro tilts:** creates a cross-sectional, equal-weight heuristic from growth, absolute inflation, public debt, current-account balance, and unemployment using the selected range. A softmax converts the top ranks into clearly labeled illustrative weights plus a cash reserve.
 - **Dashboard:** global view, country lab, crisis radar, macro tilts, and a data coverage audit.
 
 ## Quick start
@@ -58,7 +58,7 @@ streamlit run app.py
 To use a different file location:
 
 ```bash
-MACROTab_DATA=/path/to/GMD.csv streamlit run app.py
+MACROPULSE_DATA=/path/to/GMD.csv streamlit run app.py
 ```
 
 The dashboard is designed around the supplied CSV column names. The loader requires `countryname`, `ISO3`, `year`, `rGDP`, and `infl`; optional macro or crisis columns are handled as missing.
@@ -71,7 +71,7 @@ The repository's entry point is `app.py`. The current mode prompts the viewer to
 
 The supplied file contains rows dated **1086–2031**, with 57,392 country-year rows and 162 columns. Its provided brief describes a practical analysis span of roughly 1960–2031. MacroTab therefore restricts analysis to **1960–2031** and records how many source rows fall outside that window.
 
-The application uses **1960–2024** as the historical research period and displays **2025–2031** as a forward/forecast-period section. This is a conservative project convention: the CSV does not provide a complete vintage/provenance field that certifies every row after 2024 as a forecast, and the UI states that limitation. Crisis outcomes after the historical cutoff are never used for training or testing. If you have a better source-vintage cutoff, update the constants in `src/macroTab/data.py` and document the evidence.
+The historical range defaults to **1960–2024**. A two-ended sidebar slider lets the user adjust both the first modeled year and the historical cutoff; the selected bounds are applied to regime fitting, crisis analysis, and country scores. Rows from **2025–2031** remain a separate forward/forecast-period section and are not used as historical crisis outcomes. This is a conservative project convention: the CSV does not provide a complete vintage/provenance field that certifies every row after 2024 as a forecast, and the UI states that limitation. If you have a better source-vintage cutoff, update the constants in `src/macropulse/data.py` and document the evidence.
 
 The original CSV is **not committed**. `.gitignore` excludes local CSVs. The source is credited above; its separate Research Use Terms prohibit re-hosting or distributing GMD data or derived data on another site/service without the required permission. Do not include the CSV or activate public live-data serving unless the use is authorized.
 
@@ -80,7 +80,7 @@ The original CSV is **not committed**. `.gitignore` excludes local CSVs. The sou
 ### Temporal discipline
 
 - GDP growth and REER changes are calculated only for consecutive country-year observations; gaps are not bridged.
-- Regime scaling and cluster fitting use rows no later than the selected historical cutoff. Future-period rows are classified by that historical model, not used to refit it.
+- Regime scaling and cluster fitting use rows only inside the selected historical range. Future-period rows are classified by that historical model, not used to refit it.
 - Crisis labels at *t + 1* are shifted within country and accepted only for a one-year calendar step. A missing label remains missing rather than becoming a zero.
 - The crisis model has a chronological training/holdout split. The live country scores are exploratory logistic model scores; they have not been independently calibrated or validated for operational decisions.
 
@@ -92,10 +92,10 @@ The GMD file contains annual macro variables and crisis indicators, not security
 
 ```text
 app.py                         Streamlit dashboard
-src/macroTab/data.py         validation and coverage audit
-src/macroTab/features.py     annual macro feature engineering
-src/macroTab/portfolio.py    regime model, country scores, illustrative tilts
-src/macroTab/crisis.py       t+1 crisis labels and temporal model evaluation
+src/macropulse/data.py         validation and coverage audit
+src/macropulse/features.py     annual macro feature engineering
+src/macropulse/portfolio.py    regime model, country scores, illustrative tilts
+src/macropulse/crisis.py       t+1 crisis labels and temporal model evaluation
 tests/test_engine.py           unit tests
 data/README.md                 local data instructions
 ```
